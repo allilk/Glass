@@ -17,7 +17,7 @@ const option = {
 };
 
 // const mongoURI = process.env.MONGODB_URI;
-mongoose.connect('mongodb+srv://dbUser:WfrpHIyWutE3JGpp@cluster-0.1qkcu.mongodb.net/Glass?retryWrites=true&w=majority', option)
+mongoose.connect('', option)
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
