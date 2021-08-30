@@ -1,7 +1,6 @@
 const express = require("express"),
 	app = express(),
 	mongoose = require("mongoose"),
-	bodyParser = require("body-parser"),
 	port = process.env.PORT || 3000;
 let jsonWebToken = require("jsonwebtoken"),
 	cors = require("cors"),
@@ -14,8 +13,10 @@ let User = require("./models/user"),
 const option = {
 	socketTimeoutMS: 30000,
 	keepAlive: true,
-	reconnectTries: 30000,
 	useNewUrlParser: true,
+	useFindAndModify: false,
+	useCreateIndex: true,
+	useUnifiedTopology: true
 };
 
 const limiter = rateLimit({
@@ -28,9 +29,8 @@ mongoose.connect(
 	option
 );
 
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cors());
 app.use(limiter);
 app.use((req, res, next) => {
