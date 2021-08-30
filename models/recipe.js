@@ -7,7 +7,7 @@ let RecipeSchema = new Schema({
     trim: true,
     required: true,
   },
-  ingredients: {
+  ingredients: [{
     amount: {
       type: String,
       required: true,
@@ -16,7 +16,7 @@ let RecipeSchema = new Schema({
       type: String,
       required: true,
     }
-  },
+  }],
   steps: {
     type: String,
     required: true,

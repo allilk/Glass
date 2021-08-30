@@ -1,6 +1,6 @@
 let express = require("express"),
   app = express(),
-  port = process.env.PORT || 8080,
+  port = process.env.PORT || 3000,
   User = require("./models/user"),
   Recipe = require("./models/recipe"),
   bodyParser = require("body-parser"),
