@@ -53,6 +53,7 @@ exports.sign_in = function (req, res) {
 					"RESTFULAPIs",
 					{ expiresIn: "1h" }
 				),
+				refreshToken: ''
 			});
 		}
 	);
@@ -87,3 +88,6 @@ exports.profile_get = function (req, res) {
 		}
 	);
 };
+exports.refresh_token = (req, res) => {
+	
+}

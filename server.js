@@ -1,7 +1,7 @@
 const express = require("express"),
 	app = express(),
 	mongoose = require("mongoose"),
-	port = process.env.PORT || 3000;
+	port = process.env.PORT || 3030;
 let jsonWebToken = require("jsonwebtoken"),
 	cors = require("cors"),
 	rateLimit = require("express-rate-limit");
