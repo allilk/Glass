@@ -2,9 +2,6 @@ let mongoose = require("mongoose"),
   bcrypt = require("bcrypt"),
   Schema = mongoose.Schema;
 
-/**
- * User Schema
- */
 let UserSchema = new Schema({
   fullName: {
     type: String,
@@ -25,6 +22,11 @@ let UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  id: {
+    type: String,
+    unique: true,
+    required: true,
+  }
 });
 
 UserSchema.methods.comparePassword = function (password) {

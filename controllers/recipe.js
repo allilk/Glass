@@ -1,6 +1,7 @@
 let mongoose = require("mongoose"),
 	Recipe = mongoose.model("Recipe"),
 	randomstring = require("randomstring");
+
 const generateIdentifier = () => {
 	const s = randomstring.generate(5);
 
@@ -12,9 +13,12 @@ const generateIdentifier = () => {
 	return s;
 };
 exports.new = (req, res) => {
-	req.body.created_by = req.user._id;
 	const identifier = generateIdentifier();
-	req.body.id = identifier;
+	req.body = {
+		...req.body,
+		id: identifier,
+		details: { created_by: req.user.id },
+	};
 	let newRecipe = new Recipe(req.body);
 	newRecipe.save(function (err, recipe) {
 		if (err) {
@@ -42,7 +46,6 @@ exports.get = function (req, res) {
 		}
 	);
 };
-
 exports.get_all = (req, res) => {
 	const maxLimit = 100;
 	const page = parseInt(req.query.page);
@@ -56,10 +59,10 @@ exports.get_all = (req, res) => {
 			return res.status(400).send({
 				message: err,
 			});
-		} else if (result.length == 0){
+		} else if (result.length == 0) {
 			return res.status(400).send({
-				message: "No data available!"
-			})
+				message: "No data available!",
+			});
 		} else {
 			return res.json(result);
 		}

@@ -1,30 +1,41 @@
 let mongoose = require("mongoose"),
 	jwt = require("jsonwebtoken"),
 	bcrypt = require("bcrypt"),
+	randomstring = require("randomstring"),
 	User = mongoose.model("User");
 
-exports.register = function (req, res) {
-	let newUser = new User(req.body);
+const generateIdentifier = () => {
+	const s = randomstring.generate(7);
+
+	User.findOne({ id: s }, function (err, result) {
+		if (result) {
+			return generateIdentifier();
+		}
+	});
+	return s;
+};
+
+exports.register = (req, res) => {
+	let newUser = new User({ id: generateIdentifier(), ...req.body });
 	newUser.hash_password = bcrypt.hashSync(req.body.password, 10);
 	User.findOne(
 		{
 			email: req.body.email,
 		},
-		function (err, user) {
+		(err, user) => {
 			if (!user) {
-				newUser.save(function (err, user) {
-					console.log(err);
-					if (!err) {
-						user.hash_password = undefined;
-						return res.json(user);
-					} else {
+				newUser.save((err, user) => {
+					if (err) {
 						return res.status(400).send({
 							message: err,
 						});
+					} else {
+						user.hash_password = undefined;
+						return res.json(user);
 					}
 				});
 			} else {
-				return res.status(400).send({
+				return res.json(400).send({
 					message: "Email is already registered.",
 				});
 			}
@@ -48,12 +59,13 @@ exports.sign_in = function (req, res) {
 					{
 						email: user.email,
 						fullName: user.fullName,
+						id: user.id,
 						_id: user._id,
 					},
 					"RESTFULAPIs",
 					{ expiresIn: "1h" }
 				),
-				refreshToken: ''
+				refreshToken: "",
 			});
 		}
 	);
@@ -73,21 +85,12 @@ exports.profile = function (req, res, next) {
 		return res.status(401).json({ message: "Invalid token" });
 	}
 };
-exports.profile_get = function (req, res) {
-	User.findOne(
-		{
-			_id: req.body.userid,
-		},
-		function (err, user) {
-			if (err) throw err;
-			if (user) {
-				return res.json({ fullName: user.fullName });
-			} else {
-				return res.status(401).json({ message: "Invalid token" });
-			}
-		}
-	);
+
+exports.profile_get = (req, res) => {
+	User.findOne({ id: req.body.id }, (err, user) => {
+		if (err) throw err;
+		return res.json({ fullName: user.fullName });
+	});
 };
-exports.refresh_token = (req, res) => {
-	
-}
+
+exports.refresh_token = (req, res) => {};
