@@ -22,6 +22,11 @@ let UserSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  recipes: [{
+    type: Schema.Types.ObjectId,
+    ref: "Recipe",
+    required: true,
+  }],
   id: {
     type: String,
     unique: true,

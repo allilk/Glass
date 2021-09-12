@@ -1,5 +1,7 @@
 let mongoose = require("mongoose"),
 	Recipe = mongoose.model("Recipe"),
+	Category = mongoose.model("Category"),
+	User = mongoose.model("User"),
 	randomstring = require("randomstring");
 
 const generateIdentifier = () => {
@@ -12,15 +14,66 @@ const generateIdentifier = () => {
 	});
 	return s;
 };
+const getRecipe = async (identifier) => {
+	let res = await Recipe.findOne({ id: identifier })
+		.populate("details.category")
+		.populate("details.created_by")
+		.then((x) => {
+			let createdBy = x.details.created_by;
+			let user = {
+				fullName: createdBy.fullName,
+				id: createdBy.id,
+			};
+			x.details.created_by = user;
+			return x;
+		});
+	return res;
+};
 exports.new = (req, res) => {
-	const identifier = generateIdentifier();
-	req.body = {
-		...req.body,
-		id: identifier,
-		details: { created_by: req.user.id },
+	const createRecipe = (cat) => {
+		// initalize new recipe
+		const identifier = generateIdentifier();
+		let newRecipe = new Recipe({
+			...req.body,
+			id: identifier,
+			details: { created_by: req.user._id, category: cat._id },
+		});
+		// Save new recipe
+		newRecipe.save().then(async (recipe) => {
+			User.findOne({ _id: req.user._id }, (err, user) => {
+				user.recipes = [recipe._id, ...user.recipes];
+				user.save();
+			});
+			let rec = await getRecipe(recipe.id);
+			return res.json(rec);
+		});
 	};
-	let newRecipe = new Recipe(req.body);
-	newRecipe.save(function (err, recipe) {
+	// initalize new category
+	let newCat = new Category({
+		name: req.body["details.category"],
+		id: generateIdentifier(),
+	});
+	// make sure it doesnt exist
+	Category.findOne(
+		{ name: req.body["details.category"] },
+		(err, category) => {
+			if (!category) {
+				if (err) {
+					return res.status(400).send({
+						message: err,
+					});
+				} else {
+					newCat.save();
+					createRecipe(newCat);
+				}
+			} else {
+				createRecipe(category);
+			}
+		}
+	);
+};
+exports.get = (req, res) => {
+	getRecipe(req.body.id).then((err, recipe) => {
 		if (err) {
 			return res.status(400).send({
 				message: err,
@@ -30,30 +83,16 @@ exports.new = (req, res) => {
 		}
 	});
 };
-exports.get = function (req, res) {
-	Recipe.findOne(
-		{
-			id: req.body.id,
-		},
-		function (err, recipe) {
-			if (err) {
-				return res.status(400).send({
-					message: err,
-				});
-			} else {
-				return res.json(recipe);
-			}
-		}
-	);
-};
 exports.get_all = (req, res) => {
 	const maxLimit = 100;
-	const page = parseInt(req.query.page);
+	const page = parseInt(req.query.page) || 1;
+	const cat = req.query.category || "";
 	const limit =
 		parseInt(req.query.limit) > maxLimit
 			? maxLimit
 			: parseInt(req.query.limit) || 10;
 	const skipIndex = (page - 1) * limit;
+	// { "details.category": cat },
 	Recipe.find((err, result) => {
 		if (err) {
 			return res.status(400).send({

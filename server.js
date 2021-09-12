@@ -7,8 +7,10 @@ let jsonWebToken = require("jsonwebtoken"),
 	rateLimit = require("express-rate-limit");
 let User = require("./models/user"),
 	Recipe = require("./models/recipe"),
+	Category = require("./models/category"),
 	userRoutes = require("./routes/user"),
-	recipeRoutes = require("./routes/recipe");
+	recipeRoutes = require("./routes/recipe"),
+	categoryRoutes = require("./routes/category");
 
 const option = {
 	socketTimeoutMS: 30000,
@@ -56,6 +58,8 @@ app.use((req, res, next) => {
 
 userRoutes(app);
 recipeRoutes(app);
+categoryRoutes(app);
+
 app.use((req, res) => {
 	res.status(404).send({ url: req.originalUrl + " not found" });
 });
