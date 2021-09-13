@@ -87,10 +87,9 @@ exports.profile = function (req, res, next) {
 };
 
 exports.profile_get = (req, res) => {
-	User.findOne({ id: req.body.id }).populate('recipes').exec((err, user) => {
-		user.hash_password = undefined
+	User.findOne({ id: req.body.id }).populate('recipes', '-hash_password').exec((err, user) => {
 		if (err) {
-			return req.status(401).json({ message: err });
+			return req.status(400).json({ message: err });
 		} else {
 			return res.json(user);
 		}
