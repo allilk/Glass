@@ -1,6 +1,37 @@
 let mongoose = require("mongoose"),
-	Category = mongoose.model("Category");
+	Category = mongoose.model("Category"),
+	randomstring = require("randomstring"),
+	{ alcoholic, nonAlcoholic } = require("../categories");
+const generateIdentifier = () => {
+	const s = randomstring.generate(3);
 
+	Category.findOne({ id: s }, function (err, result) {
+		if (result) {
+			return generateIdentifier();
+		}
+	});
+	return s;
+};
+const checkForCat = () => {
+	Category.find({}, (err, results) => {
+		const presets = nonAlcoholic.concat(alcoholic);
+		const newArr = results.length != 0 ? results.map((obj) => {
+			return obj.name
+		}) : []
+		if (newArr != presets) {
+			console.log("Categories not found. Creating...")
+			Category.deleteMany(() => {
+				presets.forEach((preset) => {
+					const identifier = generateIdentifier();
+					new Category({
+						name: preset,
+						id: identifier,
+					}).save()
+				});
+			});
+		}
+	});
+};
 exports.get_all = (req, res) => {
 	const maxLimit = 100;
 	const page = parseInt(req.query.page) || 1;
@@ -27,3 +58,5 @@ exports.get_all = (req, res) => {
 		.skip(skipIndex)
 		.exec();
 };
+
+checkForCat();

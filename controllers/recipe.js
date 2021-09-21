@@ -27,60 +27,44 @@ const getRecipe = async (identifier) => {
 	return res;
 };
 exports.new = (req, res) => {
-	const createRecipe = (cat) => {
-		// initalize new recipe
-		const identifier = generateIdentifier();
-		let newRecipe = new Recipe({
-			...req.body,
-			id: identifier,
-			details: { created_by: req.user._id, category: cat._id },
-		});
-		// Save new recipe
-		newRecipe.save().then(async (recipe) => {
-			User.findOne({ _id: req.user._id }, (err, user) => {
-				user.recipes = [recipe._id, ...user.recipes];
+	const identifier = generateIdentifier();
+	const newRecipe = new Recipe({
+		...req.body,
+		id: identifier,
+		details: { created_by: req.user._id, category: req.category },
+	});
+
+	newRecipe.save().exec(async (err, result) => {
+		if (err) {
+			return res.status(400).send({
+				item: {},
+				message: err,
+			});
+		} else {
+			await User.findOne({ _id: req.user._id }, (user) => {
+				user.recipes = [result._id, ...user.recipes];
 				user.save();
 			});
-			let rec = await getRecipe(recipe.id);
-			return res.json(rec);
-		});
-	};
-	// initalize new category
-	let newCat = new Category({
-		name: req.body["details.category"],
-		id: generateIdentifier(),
-	});
-	// make sure it doesnt exist
-	Category.findOne(
-		{ name: req.body["details.category"] },
-		(err, category) => {
-			if (!category) {
-				if (err) {
-					return res.status(400).send({
-						message: err,
-					});
-				} else {
-					newCat.save();
-					createRecipe(newCat);
-				}
-			} else {
-				createRecipe(category);
-			}
+			return res.status(200).send({
+				item: result,
+				message: "success",
+			});
 		}
-	);
+	});
 };
+
+
 exports.get = (req, res) => {
 	getRecipe(req.body.id).then((recipe) => {
-
 		if (!recipe) {
-			return res.status(401).send({
+			return res.status(204).send({
 				message: "No recipe found.",
 			});
 		}
 		return res.json(recipe);
 	});
 };
-exports.get_all = async (req, res) => {
+exports.get_all = (req, res) => {
 	const maxLimit = 100;
 	const page = parseInt(req.query.page) || 1;
 	const limit =
@@ -91,32 +75,35 @@ exports.get_all = async (req, res) => {
 
 	let filters = {};
 
-	if (req.query.category) {
-		await Category.findOne()
-			.where({ name: req.query.category })
-			.exec()
-			.then((result) => {
-				if (result) {
-					filters["details.category"] = result._id;
-				}
-			});
-	}
+	const allowableFilters = {
+		category: "details.category.name",
+	};
+	Object.entries(allowableFilters).forEach((entry) => {
+		const [key, value] = entry;
+
+		if (req.query[key]) {
+			filters[value] = req.query[key];
+		}
+	});
 	Recipe.find()
 		.where(filters)
+		.populate("details.category")
 		.sort({ "details.created": -1 })
 		.limit(limit)
 		.skip(skipIndex)
 		.exec((err, result) => {
 			if (err) {
 				return res.status(400).send({
+					items: [],
+					count: 0,
 					message: err,
 				});
-			} else if (result.length == 0) {
-				return res.status(400).send({
-					message: "No data available!",
-				});
 			} else {
-				return res.json(result);
+				return res.status(result.length > 0 ? 200 : 204).send({
+					items: result,
+					count: result.length,
+					message: "success",
+				});
 			}
 		});
 };

@@ -25,23 +25,23 @@ let RecipeSchema = new Schema({
 	},
 	details: {
 		created_by: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+			type: Schema.Types.ObjectId,
+			ref: "User",
 		},
 		created: {
 			type: Date,
 			default: Date.now,
 		},
 		// updated_by: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: "User",
+		//   type: Schema.Types.ObjectId,
+		//   ref: "User",
 		// },
 		updated_last: {
 			type: Date,
 			default: Date.now,
 		},
 		category: {
-			type: Schema.Types.ObjectId,
+			type: String,
 			ref: "Category",
 		},
 	},
