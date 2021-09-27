@@ -12,21 +12,37 @@ const generateIdentifier = () => {
 	});
 	return s;
 };
+const arrayEquals = (a, b) => {
+	a.sort();
+	b.sort();
+	if (a === b) return true;
+	if (a == null || b == null) return false;
+	if (a.length !== b.length) return false;
+
+	for (let i = 0; i < a.length; ++i) {
+		if (a[i] !== b[i]) return false;
+	}
+
+	return true;
+};
 const checkForCat = () => {
 	Category.find({}, (err, results) => {
 		const presets = nonAlcoholic.concat(alcoholic);
-		const newArr = results.length != 0 ? results.map((obj) => {
-			return obj.name
-		}) : []
-		if (newArr != presets) {
-			console.log("Categories not found. Creating...")
+		const newArr =
+			results.length != 0
+				? results.map((obj) => {
+						return obj.name;
+				  })
+				: [];
+		if (!arrayEquals(newArr, presets)) {
+			console.log("Categories not found. Creating...");
 			Category.deleteMany(() => {
 				presets.forEach((preset) => {
 					const identifier = generateIdentifier();
 					new Category({
 						name: preset,
 						id: identifier,
-					}).save()
+					}).save();
 				});
 			});
 		}
@@ -43,14 +59,16 @@ exports.get_all = (req, res) => {
 	Category.find((err, result) => {
 		if (err) {
 			return res.status(400).send({
+				items: [],
+				count: 0,
 				message: err,
 			});
-		} else if (result.length == 0) {
-			return res.status(400).send({
-				message: "No data available!",
-			});
 		} else {
-			return res.json(result);
+			return res.status(result.length > 0 ? 200 : 204).send({
+				items: result,
+				count: result.length,
+				message: "success",
+			});
 		}
 	})
 		.sort({ "details.created": -1 })
