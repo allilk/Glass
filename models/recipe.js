@@ -2,18 +2,22 @@ let mongoose = require("mongoose"),
 	Schema = mongoose.Schema;
 
 let RecipeSchema = new Schema({
-	title: {
+	name: {
 		type: String,
 		trim: true,
 		required: true,
 	},
 	ingredients: [
 		{
+			name: {
+				type: String,
+				required: true,
+			},
 			amount: {
 				type: String,
 				required: true,
 			},
-			name: {
+			measure: {
 				type: String,
 				required: true,
 			},
@@ -42,7 +46,6 @@ let RecipeSchema = new Schema({
 		},
 		category: {
 			type: String,
-			ref: "Category",
 		},
 	},
 	id: {

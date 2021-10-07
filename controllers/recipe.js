@@ -16,7 +16,6 @@ const generateIdentifier = () => {
 };
 const getRecipe = async (identifier) => {
 	let res = await Recipe.findOne({ id: identifier })
-		.populate("details.category")
 		.populate(
 			"details.created_by",
 			"-hash_password -email -recipes  -__v -created"
@@ -31,20 +30,21 @@ exports.new = (req, res) => {
 	const newRecipe = new Recipe({
 		...req.body,
 		id: identifier,
-		details: { created_by: req.user._id, category: req.category },
+		details: { created_by: req.user._id, category: req.body.category },
 	});
 
-	newRecipe.save().exec(async (err, result) => {
+	newRecipe.save(async (err, result) => {
 		if (err) {
 			return res.status(400).send({
 				item: {},
 				message: err,
 			});
 		} else {
-			await User.findOne({ _id: req.user._id }, (user) => {
-				user.recipes = [result._id, ...user.recipes];
+			const user = await User.findOne({ _id: req.user._id });
+			if (user) {
+				user.recipes = [...user.recipes, result._id];
 				user.save();
-			});
+			}
 			return res.status(200).send({
 				item: result,
 				message: "success",
@@ -52,7 +52,6 @@ exports.new = (req, res) => {
 		}
 	});
 };
-
 
 exports.get = (req, res) => {
 	getRecipe(req.body.id).then((recipe) => {
@@ -76,7 +75,7 @@ exports.get_all = (req, res) => {
 	let filters = {};
 
 	const allowableFilters = {
-		category: "details.category.name",
+		category: "details.category",
 	};
 	Object.entries(allowableFilters).forEach((entry) => {
 		const [key, value] = entry;
@@ -87,7 +86,6 @@ exports.get_all = (req, res) => {
 	});
 	Recipe.find()
 		.where(filters)
-		.populate("details.category")
 		.sort({ "details.created": -1 })
 		.limit(limit)
 		.skip(skipIndex)
