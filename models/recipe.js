@@ -7,6 +7,9 @@ let RecipeSchema = new Schema({
 		trim: true,
 		required: true,
 	},
+	image: {
+		type: String,
+	},
 	ingredients: [
 		{
 			name: {

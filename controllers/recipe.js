@@ -1,8 +1,10 @@
 let mongoose = require("mongoose"),
+	randomstring = require("randomstring"),
 	Recipe = mongoose.model("Recipe"),
 	Category = mongoose.model("Category"),
-	User = mongoose.model("User"),
-	randomstring = require("randomstring");
+	User = mongoose.model("User");
+
+
 
 const generateIdentifier = () => {
 	const s = randomstring.generate(5);
@@ -26,6 +28,9 @@ const getRecipe = async (identifier) => {
 	return res;
 };
 exports.new = (req, res) => {
+	// upload.single('image', (err) => {
+	// 	console.log(err)
+	// })
 	const identifier = generateIdentifier();
 	const newRecipe = new Recipe({
 		...req.body,
@@ -52,7 +57,7 @@ exports.new = (req, res) => {
 		}
 	});
 };
-
+exports.upload = (req, res, next) => {};
 exports.get = (req, res) => {
 	getRecipe(req.body.id).then((recipe) => {
 		if (!recipe) {

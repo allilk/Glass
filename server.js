@@ -11,6 +11,7 @@ let User = require("./models/user"),
 	userRoutes = require("./routes/user"),
 	recipeRoutes = require("./routes/recipe"),
 	categoryRoutes = require("./routes/category");
+	require("dotenv").config();
 
 const option = {
 	socketTimeoutMS: 30000,
@@ -27,11 +28,11 @@ const limiter = rateLimit({
 });
 
 mongoose.connect(
-	"",
+	process.env.MONGO_URI,
 	option
 );
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 app.use(limiter);
