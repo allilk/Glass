@@ -29,6 +29,7 @@ exports.upload = async (req, res) => {
 
 		return s3.upload(uploadParams).promise();
 	};
+
 	const file = req.file;
 	const result = await uploadFile(file);
 
@@ -38,12 +39,13 @@ exports.upload = async (req, res) => {
 };
 
 exports.get = async (req, res) => {
-	const fileKey = req.body.fileKey;
+	const { fileKey } = req.body;
 	const getParams = {
 		Key: fileKey,
 		Bucket: bucketName,
 		Expires: 60,
 	};
+
 	return res.status(200).send({
 		url: s3.getSignedUrl("getObject", getParams),
 	});

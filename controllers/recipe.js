@@ -28,10 +28,8 @@ const getRecipe = async (identifier) => {
 	return res;
 };
 exports.new = (req, res) => {
-	// upload.single('image', (err) => {
-	// 	console.log(err)
-	// })
 	const identifier = generateIdentifier();
+
 	const newRecipe = new Recipe({
 		...req.body,
 		id: identifier,
@@ -57,15 +55,12 @@ exports.new = (req, res) => {
 		}
 	});
 };
-exports.upload = (req, res, next) => {};
 exports.get = (req, res) => {
 	getRecipe(req.body.id).then((recipe) => {
-		if (!recipe) {
-			return res.status(204).send({
-				message: "No recipe found.",
-			});
-		}
-		return res.json(recipe);
+		return res.status(recipe ? 200 : 204).send({
+			item: recipe,
+			message: "success",
+		});
 	});
 };
 exports.get_all = (req, res) => {

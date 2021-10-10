@@ -11,7 +11,7 @@ let User = require("./models/user"),
 	userRoutes = require("./routes/user"),
 	recipeRoutes = require("./routes/recipe"),
 	categoryRoutes = require("./routes/category");
-	require("dotenv").config();
+require("dotenv").config();
 
 const option = {
 	socketTimeoutMS: 30000,
@@ -19,7 +19,7 @@ const option = {
 	useNewUrlParser: true,
 	useFindAndModify: false,
 	useCreateIndex: true,
-	useUnifiedTopology: true
+	useUnifiedTopology: true,
 };
 
 const limiter = rateLimit({
@@ -27,10 +27,7 @@ const limiter = rateLimit({
 	max: 100,
 });
 
-mongoose.connect(
-	process.env.MONGO_URI,
-	option
-);
+mongoose.connect(process.env.MONGO_URI, option);
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -44,7 +41,7 @@ app.use((req, res, next) => {
 	) {
 		jsonWebToken.verify(
 			req.headers.authorization.split(" ")[1],
-			"RESTFULAPIs",
+			process.env.ACCESS_SECRET,
 			function (err, decode) {
 				if (err) req.user = undefined;
 				req.user = decode;

@@ -1,4 +1,6 @@
-let mongoose = require("mongoose"),
+require("dotenv").config();
+
+const mongoose = require("mongoose"),
 	jwt = require("jsonwebtoken"),
 	bcrypt = require("bcrypt"),
 	randomstring = require("randomstring"),
@@ -14,62 +16,64 @@ const generateIdentifier = () => {
 	});
 	return s;
 };
-
 exports.register = (req, res) => {
-	let newUser = new User({ id: generateIdentifier(), ...req.body });
+	const { email } = req.body;
+
+	const newUser = new User({ id: generateIdentifier(), ...req.body });
 	newUser.hash_password = bcrypt.hashSync(req.body.password, 10);
-	User.findOne(
-		{
-			email: req.body.email,
-		},
-		(err, user) => {
-			if (!user) {
-				newUser.save((err, user) => {
-					if (err) {
-						return res.status(400).send({
-							message: err,
-						});
-					} else {
-						user.hash_password = undefined;
-						return res.json(user);
-					}
-				});
-			} else {
-				return res.json(400).send({
-					message: "Email is already registered.",
-				});
-			}
-		}
-	);
-};
-exports.sign_in = function (req, res) {
-	User.findOne(
-		{
-			email: req.body.email,
-		},
-		function (err, user) {
-			if (err) throw err;
-			if (!user || !user.comparePassword(req.body.password)) {
-				return res.status(401).json({
-					message: "Authentication failed. Invalid user or password.",
-				});
-			}
-			return res.json({
-				token: jwt.sign(
-					{
-						email: user.email,
-						fullName: user.fullName,
-						id: user.id,
-						_id: user._id,
-					},
-					"RESTFULAPIs",
-					{ expiresIn: "1h" }
-				),
-				refreshToken: "",
+
+	User.findOne({ email }, (err, user) => {
+		if (err) {
+			return res.status(400).send({
+				user: {},
+				message: err,
 			});
 		}
-	);
+		if (!user) {
+			newUser.save();
+			return res.status(200).send({
+				user,
+				message: "success",
+			});
+		} else {
+			return res.status(403).send({
+				user: {},
+				message: "Email is already registered!",
+			});
+		}
+	}).populate("-hash_password");
 };
+exports.login = (req, res) => {
+	const { email, password } = req.body;
+
+	User.findOne({ email }, (err, user) => {
+		if (err) {
+			return res.status(400).send({
+				accessToken: "",
+				refreshToken: "",
+				message: err,
+			});
+		}
+		if (!user || !user.comparePassword(password)) {
+			return res.status(401).send({
+				accessToken: "",
+				refreshToken: "",
+				message: "Authentication failed. Invalid user or password.",
+			});
+		}
+		return res.status(200).send({
+			accessToken: jwt.sign(
+				{
+					_id: user._id,
+				},
+				process.env.ACCESS_SECRET,
+				{ expiresIn: "1h" }
+			),
+			refreshToken: "",
+		});
+	});
+};
+
 exports.loginRequired = function (req, res, next) {
 	if (req.user) {
 		next();
@@ -87,13 +91,15 @@ exports.profile = function (req, res, next) {
 };
 
 exports.profile_get = (req, res) => {
-	User.findOne({ id: req.body.id }).populate('recipes', '-hash_password').exec((err, user) => {
-		if (err) {
-			return req.status(400).json({ message: err });
-		} else {
-			return res.json(user);
-		}
-	})
+	User.findOne({ id: req.body.id })
+		.populate("recipes", "-hash_password")
+		.exec((err, user) => {
+			if (err) {
+				return req.status(400).json({ message: err });
+			} else {
+				return res.json(user);
+			}
+		});
 };
 
 exports.refresh_token = (req, res) => {};

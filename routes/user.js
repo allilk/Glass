@@ -7,5 +7,5 @@ module.exports = function (app) {
     .route("/profile/get")
     .post(userHandlers.profile_get);
   app.route("/auth/register").post(userHandlers.register);
-  app.route("/auth/login").post(userHandlers.sign_in);
+  app.route("/auth/login").post(userHandlers.login);
 };
