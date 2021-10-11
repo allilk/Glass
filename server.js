@@ -1,8 +1,9 @@
+require("dotenv").config();
+
 const express = require("express"),
 	app = express(),
 	mongoose = require("mongoose"),
-	port = process.env.PORT || 3030;
-let jsonWebToken = require("jsonwebtoken"),
+	port = process.env.PORT || 3030,
 	cors = require("cors"),
 	rateLimit = require("express-rate-limit");
 let User = require("./models/user"),
@@ -10,8 +11,8 @@ let User = require("./models/user"),
 	Category = require("./models/category"),
 	userRoutes = require("./routes/user"),
 	recipeRoutes = require("./routes/recipe"),
+	imageRoutes = require("./routes/image"),
 	categoryRoutes = require("./routes/category");
-require("dotenv").config();
 
 const option = {
 	socketTimeoutMS: 30000,
@@ -33,29 +34,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 app.use(limiter);
-app.use((req, res, next) => {
-	if (
-		req.headers &&
-		req.headers.authorization &&
-		req.headers.authorization.split(" ")[0] === "JWT"
-	) {
-		jsonWebToken.verify(
-			req.headers.authorization.split(" ")[1],
-			process.env.ACCESS_SECRET,
-			function (err, decode) {
-				if (err) req.user = undefined;
-				req.user = decode;
-				next();
-			}
-		);
-	} else {
-		req.user = undefined;
-		next();
-	}
-});
 
-userRoutes(app);
-recipeRoutes(app);
+app.use("/auth", userRoutes);
+app.use("/recipe", recipeRoutes);
+app.use("/image", imageRoutes);
 categoryRoutes(app);
 
 app.use((req, res) => {

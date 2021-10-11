@@ -1,11 +1,9 @@
-module.exports = function (app) {
-  let userHandlers = require("../controllers/user.js");
-  app
-    .route("/profile")
-    .post(userHandlers.loginRequired, userHandlers.profile);
-  app
-    .route("/profile/get")
-    .post(userHandlers.profile_get);
-  app.route("/auth/register").post(userHandlers.register);
-  app.route("/auth/login").post(userHandlers.login);
-};
+const express = require("express"),
+	router = express.Router();
+const UserController = require("../controllers/user.js");
+// const { verifyAccessToken: loginRequired } = require("../helpers/jwt_helper");
+
+router.post("/login", UserController.login);
+router.post("/register", UserController.register);
+
+module.exports = router;

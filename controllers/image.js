@@ -17,36 +17,36 @@ const s3 = new S3({
 	secretAccessKey,
 });
 
-exports.upload = async (req, res) => {
-	const uploadFile = async (file) => {
-		const fileStream = fs.createReadStream(file.path);
+module.exports = {
+	upload: async (req, res) => {
+		const uploadFile = async (file) => {
+			const fileStream = fs.createReadStream(file.path);
 
-		const uploadParams = {
+			const uploadParams = {
+				Bucket: bucketName,
+				Body: fileStream,
+				Key: file.filename,
+			};
+
+			return s3.upload(uploadParams).promise();
+		};
+		const file = req.file;
+		const result = await uploadFile(file);
+
+		await unlinkFile(file.path);
+
+		return res.status(200).send({ key: result.Key });
+	},
+	get: async (req, res) => {
+		const { fileKey } = req.body;
+		const getParams = {
+			Key: fileKey,
 			Bucket: bucketName,
-			Body: fileStream,
-			Key: file.filename,
+			Expires: 60,
 		};
 
-		return s3.upload(uploadParams).promise();
-	};
-
-	const file = req.file;
-	const result = await uploadFile(file);
-
-	await unlinkFile(file.path);
-
-	return res.status(200).send({ key: result.Key });
-};
-
-exports.get = async (req, res) => {
-	const { fileKey } = req.body;
-	const getParams = {
-		Key: fileKey,
-		Bucket: bucketName,
-		Expires: 60,
-	};
-
-	return res.status(200).send({
-		url: s3.getSignedUrl("getObject", getParams),
-	});
+		return res.status(200).send({
+			url: s3.getSignedUrl("getObject", getParams),
+		});
+	},
 };

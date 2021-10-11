@@ -31,6 +31,9 @@ let UserSchema = new Schema({
     type: String,
     unique: true,
     required: true,
+  },
+  refreshToken: {
+    type: String,
   }
 });
 
