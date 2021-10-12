@@ -1,17 +1,22 @@
 const mongoose = require("mongoose"),
-	User = mongoose.model("User");
+	User = mongoose.model("User"),
+	Token = mongoose.model("Token");
 const bcrypt = require("bcrypt");
 const { generateIdentifier } = require("../helpers/other");
-const { generateAccessToken } = require("../helpers/jwt_helper");
+const {
+	generateAccessToken,
+	generateRefreshToken,
+	verifyRefreshToken,
+} = require("../helpers/jwt_helper");
 
 module.exports = {
-	register: (req, res) => {
+	register: async (req, res) => {
 		const { email } = req.body;
 
 		const newUser = new User({ id: generateIdentifier(7), ...req.body });
 		newUser.hash_password = bcrypt.hashSync(req.body.password, 10);
 
-		User.findOne({ email }, (err, user) => {
+		await User.findOne({ email }, async (err, user) => {
 			if (err) {
 				return res.status(400).send({
 					user: {},
@@ -19,7 +24,7 @@ module.exports = {
 				});
 			}
 			if (!user) {
-				newUser.save();
+				await newUser.save();
 				return res.status(200).send({
 					user,
 					message: "success",
@@ -32,10 +37,10 @@ module.exports = {
 			}
 		}).populate("-hash_password");
 	},
-	login: (req, res) => {
+	login: async (req, res) => {
 		const { email, password } = req.body;
 
-		User.findOne({ email }, async (err, user) => {
+		await User.findOne({ email }, async (err, user) => {
 			if (err) {
 				return res.status(400).send({
 					accessToken: "",
@@ -50,13 +55,38 @@ module.exports = {
 				});
 			}
 			const accessToken = await generateAccessToken(user._id);
+
+			if (!user.refreshToken) {
+				user.refreshToken = await generateRefreshToken(user._id);
+				user.save();
+			} else {
+				const validToken = await verifyRefreshToken(user.refreshToken);
+				if (!validToken) {
+					user.refreshToken = await generateRefreshToken(user._id);
+					user.save();
+				}
+			}
 			return res.status(200).send({
 				accessToken,
-				refreshToken: "",
+				refreshToken: user.refreshToken,
 			});
 		});
 	},
-	profile: async (req, res, next) => {
+	refreshToken: async (req, res) => {
+		const { refreshToken, accessToken } = req.body;
+		if (!refreshToken) throw createError.BadRequest();
+		const userId = await verifyRefreshToken(refreshToken);
+		// blacklist token
+		await new Token({ token: accessToken, type: 'accessToken' }).save();
+
+		const accToken = await signAccessToken(userId);
+		const refToken = await signRefreshToken(userId);
+		res.status(200).send({
+			accessToken: accToken,
+			refreshToken: refToken,
+		});
+	},
+	profile: async (req, res) => {
 		const { id } = req.body;
 		const user = await User.findOne({ id })
 			.select("-hash_password -email -__v")

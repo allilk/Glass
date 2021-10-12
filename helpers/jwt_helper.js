@@ -3,7 +3,8 @@ require("dotenv").config();
 const JWT = require("jsonwebtoken"),
 	createError = require("http-errors");
 const mongoose = require("mongoose"),
-	User = mongoose.model("User");
+	User = mongoose.model("User"),
+	Token = mongoose.model("Token");
 
 module.exports = {
 	generateAccessToken: (userId) => {
@@ -28,21 +29,33 @@ module.exports = {
 	verifyAccessToken: (req, res, next) => {
 		const accessTokenSecret = process.env.ACCESS_SECRET;
 		if (!req.headers["authorization"])
-			return next(createError.Unauthorized());
+			return res.status(401).send({
+				message: "Unauthorized",
+			});
 		const authHeader = req.headers["authorization"];
 		const bearerToken = authHeader.split(" ");
 		const token = bearerToken[1];
 
-		JWT.verify(token, accessTokenSecret, (err, payload) => {
-			if (err) {
-				const message =
-					err.name === "JsonWebTokenError"
-						? "Unauthorized"
-						: err.message;
-				return next(createError.Unauthorized(message));
+		Token.findOne({ token, type: "accessToken" }, (err, result) => {
+			if (!result) {
+				JWT.verify(token, accessTokenSecret, (err, payload) => {
+					if (err) {
+						const message =
+							err.name === "JsonWebTokenError"
+								? "Unauthorized"
+								: err.message;
+						return res.status(401).send({
+							message,
+						});
+					}
+					req.payload = payload;
+					next();
+				});
+			} else {
+				return res.status(401).send({
+					message: "Unauthorized",
+				});
 			}
-			req.payload = payload;
-			next();
 		});
 	},
 	generateRefreshToken: (userId) => {
@@ -66,19 +79,22 @@ module.exports = {
 	verifyRefreshToken: (refreshToken) => {
 		const refreshTokenSecret = process.env.REFRESH_SECRET;
 		return new Promise((resolve, reject) => {
-			JWT.verify(refreshToken, refreshTokenSecret, (err, payload) => {
-				if (err) return reject(createError.Unauthorized());
-				const userId = payload.audience;
-
-				User.findById(userId, (err, user) => {
-					if (err) {
-						console.log(err.message);
-						reject(createError.InternalServerError());
-						return;
-					}
-					if (refreshToken === user.refreshToken)
-						return resolve(userId);
+			Token.findOne({ token: refreshToken, type: "refreshToken" }, (err, result) => {
+				if (result) {
 					reject(createError.Unauthorized());
+				}
+				JWT.verify(refreshToken, refreshTokenSecret, (err, payload) => {
+					if (err) return reject(createError.Unauthorized());
+					const userId = payload.aud;
+					User.findById(userId, (err, user) => {
+						if (err) {
+							reject(createError.InternalServerError());
+							return;
+						}
+						if (refreshToken === user.refreshToken)
+							return resolve(userId);
+						reject(createError.Unauthorized());
+					});
 				});
 			});
 		});
