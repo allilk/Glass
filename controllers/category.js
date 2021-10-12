@@ -1,7 +1,9 @@
 let mongoose = require("mongoose"),
 	Category = mongoose.model("Category"),
-	randomstring = require("randomstring"),
-	{ alcoholic, nonAlcoholic } = require("../categories");
+	randomstring = require("randomstring");
+const nonAlcoholic = ["soft_drinks", "juice", "tea", "coffee", "shake"];
+const alcoholic = ["cider", "beer", "wine", "cocktails"];
+
 const generateIdentifier = () => {
 	const s = randomstring.generate(3);
 

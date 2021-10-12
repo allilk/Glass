@@ -50,6 +50,10 @@ let RecipeSchema = new Schema({
 		category: {
 			type: String,
 		},
+		alcoholic: {
+			type: Boolean,
+			default: false,
+		}
 	},
 	id: {
 		type: String,

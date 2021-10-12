@@ -69,6 +69,8 @@ module.exports = {
 			return res.status(200).send({
 				accessToken,
 				refreshToken: user.refreshToken,
+				_id: user._id,
+				id: user.id,
 			});
 		});
 	},
@@ -77,7 +79,7 @@ module.exports = {
 		if (!refreshToken) throw createError.BadRequest();
 		const userId = await verifyRefreshToken(refreshToken);
 		// blacklist token
-		await new Token({ token: accessToken, type: 'accessToken' }).save();
+		await new Token({ token: accessToken, type: "accessToken" }).save();
 
 		const accToken = await signAccessToken(userId);
 		const refToken = await signRefreshToken(userId);
