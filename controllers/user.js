@@ -56,5 +56,15 @@ module.exports = {
 			});
 		});
 	},
-	profile: (req, res, next) => {},
+	profile: async (req, res, next) => {
+		const { id } = req.body;
+		const user = await User.findOne({ id })
+			.select("-hash_password -email -__v")
+			.populate("recipes", "-ingredients -steps");
+
+		return res.status(user ? 200 : 204).send({
+			user,
+			message: "success",
+		});
+	},
 };

@@ -12,6 +12,8 @@ const accessKeyId = process.env.AWS_ACCESS_KEY;
 const secretAccessKey = process.env.AWS_SECRET_KEY;
 
 const s3 = new S3({
+	endpoint: "cdn.cream.glass",
+	s3BucketEndpoint: true,
 	region,
 	accessKeyId,
 	secretAccessKey,
@@ -47,6 +49,15 @@ module.exports = {
 
 		return res.status(200).send({
 			url: s3.getSignedUrl("getObject", getParams),
+		});
+	},
+	delete: async (Key) => {
+		const deleteParams = {
+			Key,
+			Bucket: bucketName,
+		};
+		return s3.deleteObject(deleteParams, (err, result) => {
+			console.log(err, result);
 		});
 	},
 };

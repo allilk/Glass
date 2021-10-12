@@ -48,33 +48,22 @@ const checkForCat = () => {
 		}
 	});
 };
-exports.get_all = (req, res) => {
-	const maxLimit = 100;
-	const page = parseInt(req.query.page) || 1;
-	const limit =
-		parseInt(req.query.limit) > maxLimit
-			? maxLimit
-			: parseInt(req.query.limit) || 10;
-	const skipIndex = (page - 1) * limit;
-	Category.find((err, result) => {
-		if (err) {
-			return res.status(400).send({
-				items: [],
-				count: 0,
-				message: err,
-			});
-		} else {
+module.exports = {
+	getAll: (req, res) => {
+		Category.find((err, result) => {
+			if (err) {
+				return res.status(400).send({
+					items: [],
+					count: 0,
+					message: err,
+				});
+			}
 			return res.status(result.length > 0 ? 200 : 204).send({
 				items: result,
 				count: result.length,
 				message: "success",
 			});
-		}
-	})
-		.sort({ "details.created": -1 })
-		.limit(limit)
-		.skip(skipIndex)
-		.exec();
-};
-
+		})
+	}
+}
 checkForCat();

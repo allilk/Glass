@@ -6,7 +6,7 @@ const express = require("express"),
 	port = process.env.PORT || 3030,
 	cors = require("cors"),
 	rateLimit = require("express-rate-limit");
-let User = require("./models/user"),
+const User = require("./models/user"),
 	Recipe = require("./models/recipe"),
 	Category = require("./models/category"),
 	userRoutes = require("./routes/user"),
@@ -38,7 +38,7 @@ app.use(limiter);
 app.use("/auth", userRoutes);
 app.use("/recipe", recipeRoutes);
 app.use("/image", imageRoutes);
-categoryRoutes(app);
+app.use("/category", categoryRoutes);
 
 app.use((req, res) => {
 	res.status(404).send({ url: req.originalUrl + " not found" });

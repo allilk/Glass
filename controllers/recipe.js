@@ -2,6 +2,7 @@ const mongoose = require("mongoose"),
 	Recipe = mongoose.model("Recipe"),
 	User = mongoose.model("User");
 const { generateIdentifier } = require("../helpers/other");
+const ImageController = require("../controllers/image.js");
 
 module.exports = {
 	new: (req, res) => {
@@ -87,6 +88,30 @@ module.exports = {
 			});
 	},
 	update: (req, res) => {},
+	delete: async (req, res) => {
+		const identifier = req.body.id;
+		const recipe = await Recipe.findOneAndDelete({ id: identifier });
+		const user = recipe.details.created_by;
+		if (recipe.image) {
+			ImageController.delete(recipe.image);
+		}
+		await User.findByIdAndUpdate(
+			{ _id: user },
+			{ $pull: { recipes: recipe._id } },
+			(err, result) => {
+				if (err) {
+					return res.status(400).send({
+						user: "",
+						message: err,
+					});
+				}
+				return res.status(200).send({
+					user: result,
+					message: "success",
+				});
+			}
+		);
+	},
 };
 
 // exports.update = function (req, res) {
