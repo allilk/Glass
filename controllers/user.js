@@ -1,8 +1,10 @@
 const mongoose = require("mongoose"),
 	User = mongoose.model("User"),
 	Token = mongoose.model("Token");
+
 const bcrypt = require("bcrypt");
-const { generateIdentifier } = require("../helpers/other");
+
+const { generateUserId } = require("../helpers/other");
 const {
 	generateAccessToken,
 	generateRefreshToken,
@@ -13,7 +15,7 @@ module.exports = {
 	register: async (req, res) => {
 		const { email } = req.body;
 
-		const newUser = new User({ id: generateIdentifier(7), ...req.body });
+		const newUser = new User({ id: generateUserId(7), ...req.body });
 		newUser.hash_password = bcrypt.hashSync(req.body.password, 10);
 
 		await User.findOne({ email }, async (err, user) => {

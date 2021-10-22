@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const JWT = require("jsonwebtoken"),
 	createError = require("http-errors");
+
 const mongoose = require("mongoose"),
 	User = mongoose.model("User"),
 	Token = mongoose.model("Token");
@@ -79,24 +80,31 @@ module.exports = {
 	verifyRefreshToken: (refreshToken) => {
 		const refreshTokenSecret = process.env.REFRESH_SECRET;
 		return new Promise((resolve, reject) => {
-			Token.findOne({ token: refreshToken, type: "refreshToken" }, (err, result) => {
-				if (result) {
-					reject(createError.Unauthorized());
-				}
-				JWT.verify(refreshToken, refreshTokenSecret, (err, payload) => {
-					if (err) return reject(createError.Unauthorized());
-					const userId = payload.aud;
-					User.findById(userId, (err, user) => {
-						if (err) {
-							reject(createError.InternalServerError());
-							return;
-						}
-						if (refreshToken === user.refreshToken)
-							return resolve(userId);
+			Token.findOne(
+				{ token: refreshToken, type: "refreshToken" },
+				(err, result) => {
+					if (result) {
 						reject(createError.Unauthorized());
-					});
-				});
-			});
+					}
+					JWT.verify(
+						refreshToken,
+						refreshTokenSecret,
+						(err, payload) => {
+							if (err) return reject(createError.Unauthorized());
+							const userId = payload.aud;
+							User.findById(userId, (err, user) => {
+								if (err) {
+									reject(createError.InternalServerError());
+									return;
+								}
+								if (refreshToken === user.refreshToken)
+									return resolve(userId);
+								reject(createError.Unauthorized());
+							});
+						}
+					);
+				}
+			);
 		});
 	},
 };

@@ -1,7 +1,7 @@
-let mongoose = require("mongoose"),
+const mongoose = require("mongoose"),
 	Schema = mongoose.Schema;
 
-let RecipeSchema = new Schema({
+const recipeSchema = new Schema({
 	name: {
 		type: String,
 		trim: true,
@@ -53,7 +53,7 @@ let RecipeSchema = new Schema({
 		alcoholic: {
 			type: Boolean,
 			default: false,
-		}
+		},
 	},
 	id: {
 		type: String,
@@ -62,4 +62,4 @@ let RecipeSchema = new Schema({
 	},
 });
 
-mongoose.model("Recipe", RecipeSchema, "recipes");
+mongoose.model("Recipe", recipeSchema);

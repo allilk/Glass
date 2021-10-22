@@ -1,12 +1,13 @@
 const mongoose = require("mongoose"),
 	Recipe = mongoose.model("Recipe"),
 	User = mongoose.model("User");
-const { generateIdentifier } = require("../helpers/other");
+
+const { generateRecipeId } = require("../helpers/other");
 const ImageController = require("../controllers/image.js");
 
 module.exports = {
 	new: (req, res) => {
-		const identifier = generateIdentifier(5);
+		const identifier = generateRecipeId(5);
 		const userId = req.payload.aud;
 		const newRecipe = new Recipe({
 			...req.body,

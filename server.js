@@ -2,10 +2,12 @@ require("dotenv").config();
 
 const express = require("express"),
 	app = express(),
-	mongoose = require("mongoose"),
-	port = process.env.PORT || 3030,
-	cors = require("cors"),
-	rateLimit = require("express-rate-limit");
+	rateLimit = require("express-rate-limit"),
+	cors = require("cors");
+
+const mongoose = require("mongoose"),
+	port = process.env.PORT || 3030;
+
 const User = require("./models/user"),
 	Recipe = require("./models/recipe"),
 	Category = require("./models/category"),

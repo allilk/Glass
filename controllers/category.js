@@ -1,19 +1,11 @@
-let mongoose = require("mongoose"),
-	Category = mongoose.model("Category"),
-	randomstring = require("randomstring");
+const mongoose = require("mongoose"),
+	Category = mongoose.model("Category");
+
+const { generateCategoryId } = require("../helpers/other");
+
 const nonAlcoholic = ["soft_drinks", "juice", "tea", "coffee", "shake"];
 const alcoholic = ["cider", "beer", "wine", "cocktails"];
 
-const generateIdentifier = () => {
-	const s = randomstring.generate(3);
-
-	Category.findOne({ id: s }, function (err, result) {
-		if (result) {
-			return generateIdentifier();
-		}
-	});
-	return s;
-};
 const arrayEquals = (a, b) => {
 	a.sort();
 	b.sort();
@@ -40,7 +32,7 @@ const checkForCat = () => {
 			console.log("Categories not found. Creating...");
 			Category.deleteMany(() => {
 				presets.forEach((preset) => {
-					const identifier = generateIdentifier();
+					const identifier = generateCategoryId(3);
 					new Category({
 						name: preset,
 						id: identifier,
@@ -65,7 +57,7 @@ module.exports = {
 				count: result.length,
 				message: "success",
 			});
-		})
-	}
-}
+		});
+	},
+};
 checkForCat();

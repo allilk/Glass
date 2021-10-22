@@ -1,7 +1,7 @@
-let mongoose = require("mongoose"),
+const mongoose = require("mongoose"),
 	Schema = mongoose.Schema;
 
-let TokenSchema = new Schema({
+const tokenSchema = new Schema({
 	token: {
 		type: String,
 		required: true,
@@ -12,4 +12,4 @@ let TokenSchema = new Schema({
 	},
 });
 
-mongoose.model("Token", TokenSchema, "tokens");
+mongoose.model("Token", tokenSchema);
